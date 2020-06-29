@@ -41,7 +41,7 @@
     Author:                   Danny Roemhild, Luca Kaufmann
     ModifyDate:               26.06.2020                                                       
     Usage:        
-    Version:                  1.0
+    Version:                  1.1
                                                                                   
     ---------------------------------------------------------------------------------
 #>
@@ -51,6 +51,7 @@
 $Serverlist = "(placeyourpathhere)"+$serverlistdomain+".txt"
 $PathBlacklist  = "(placeyourpathhere)\blacklist.txt"
 $PathWhitelist  = "(placeyourpathhere)\Whitelist.txt"
+$FileGroupName = "Ransomware"
 
 #############################################################################################
                                            #End Variables to Define
@@ -76,7 +77,7 @@ $Whitelist = $importWhiteList | sort -Unique
 #Begin Function getransomware ###############
 function getransomware() {
 
-$Group = Get-FSRMFileGroup -Name "Ransomware"
+$Group = Get-FSRMFileGroup -Name $FileGroupName
 Write-Host "In 5 Seconds all Extentions will be shown" -ForegroundColor Red
 Start-Sleep -Seconds "5"
 $list = $Group.IncludePattern
@@ -91,7 +92,7 @@ function updateransomware($blacklist,$whitelist) {
 #The Funktion got a Security Mechanism which denies the Push of an empty Ransomware Extention list if they where corrupted
 #This Funktion only Add new Extentions and eliminate Whitelisted Extentions 
 
-$Group = Get-FSRMFileGroup -Name "Ransomware"
+$Group = Get-FSRMFileGroup -Name $FileGroupName
 $currentpattern = $Group.IncludePattern
 
 
@@ -114,11 +115,11 @@ foreach($CheckB in $BlackList)
 }   
 
 $Pattern = $Pattern.Where({$_ -ne ""}) | sort -Unique
-Set-FSRMFileGroup -Name "Ransomware" –IncludePattern $Pattern 
+Set-FSRMFileGroup -Name $FileGroupName –IncludePattern $Pattern 
 
 #Check Extentions Again, Filter Whitelisted  Ext. and Push Pattern List Again.
 
-$groupnew = Get-FsrmFileGroup -Name "Ransomware"
+$groupnew = Get-FsrmFileGroup -Name $FileGroupName
 $pat = $groupnew.IncludePattern 
 $patwhitelist = @($pat).ForEach{$_}
 
@@ -136,7 +137,7 @@ foreach($CheckW in $whitelist)
     
 }
 [string[]]$patwhitelist | Sort -Unique
-Set-FsrmFileGroup -Name "Ransomware" -IncludePattern $patwhitelist
+Set-FsrmFileGroup -Name $FileGroupName -IncludePattern $patwhitelist
 
 
 }
