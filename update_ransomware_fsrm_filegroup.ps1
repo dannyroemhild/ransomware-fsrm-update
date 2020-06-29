@@ -75,7 +75,7 @@ $Whitelist = $importWhiteList | sort -Unique
 #Functions
 
 #Begin Function getransomware ###############
-function getransomware() {
+function getransomware($FileGroupName) {
 
 $Group = Get-FSRMFileGroup -Name $FileGroupName
 Write-Host "In 5 Seconds all Extentions will be shown" -ForegroundColor Red
@@ -87,7 +87,7 @@ $listType = $Group.IncludePattern.GetType()
 
 
 #Beginn Function updateransomware
-function updateransomware($blacklist,$whitelist) { 
+function updateransomware($blacklist,$whitelist,$FileGroupName) { 
 
 #The Funktion got a Security Mechanism which denies the Push of an empty Ransomware Extention list if they where corrupted
 #This Funktion only Add new Extentions and eliminate Whitelisted Extentions 
@@ -115,7 +115,7 @@ foreach($CheckB in $BlackList)
 }   
 
 $Pattern = $Pattern.Where({$_ -ne ""}) | sort -Unique
-Set-FSRMFileGroup -Name $FileGroupName â€“IncludePattern $Pattern 
+Set-FSRMFileGroup -Name $FileGroupName –IncludePattern $Pattern 
 
 #Check Extentions Again, Filter Whitelisted  Ext. and Push Pattern List Again.
 
@@ -152,7 +152,7 @@ Set-FsrmFileGroup -Name $FileGroupName -IncludePattern $patwhitelist
 
 foreach($server in $importServerlist){
 
-Invoke-Command -Computername $server  -ScriptBlock ${function:updateransomware} -ArgumentList $BlackList,$Whitelist
+Invoke-Command -Computername $server  -ScriptBlock ${function:updateransomware} -ArgumentList $BlackList,$Whitelist,$FileGroupName
 
 }
 
