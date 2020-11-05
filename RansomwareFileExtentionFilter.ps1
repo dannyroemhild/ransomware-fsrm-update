@@ -40,7 +40,7 @@
     ---------------------------------------------------------------------------------
 #>
 Param(
-    [Parameter(Mandatory=$True)]
+    [Parameter(Mandatory=$False)]
     [switch]$ScreenAllVolumes
 )
 
@@ -127,7 +127,7 @@ function autocheckVolumescreateScreen
 
 
 
-}
+
 
     #Beginn Script
 
@@ -141,7 +141,7 @@ function autocheckVolumescreateScreen
     
     $blockList = ($download).content -split "`n"
     $TrustList = Get-Content -Path $pathTrustList
-    $blockList | foreach {
+    $blockList | ForEach-Object {
                             if ($TrustList -notcontains $_) 
                             { 
                                 [array]$newlist += $_
@@ -161,7 +161,7 @@ while ($checkforFSRMGroup -eq $false) {
     Start-Sleep -Seconds 3
     $checkforFSRMGroup = checkFSRMGroupRansomware $server
     } 
-if (ScreenAllVolumes -eq $true) 
+if ($ScreenAllVolumes -eq $true) 
 {
     Invoke-Command -ComputerName $server -ScriptBlock ${function:autocheckVolumescreateScreen}
 }
