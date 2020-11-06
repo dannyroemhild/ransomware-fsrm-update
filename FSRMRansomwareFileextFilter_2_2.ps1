@@ -92,10 +92,10 @@ function createFSRMGroup ([string]$AdminMailAdress, [string]$SmtpServer){
 Set-FsrmSetting -SmtpServer $SmtpServer -AdminEmailAddress $AdminMailAdress
 
 # New FSRM Group and create Template :
-New-FsrmFileGroup -Name "Ransomware" –IncludePattern @("*.0day", "*.crypt")
+New-FsrmFileGroup -Name "Ransomware" -IncludePattern @("*.0day", "*.crypt")
 
 $Notification = New-FsrmAction -Type Email -MailTo $AdminMailAdress -Subject "Nicht autorisierte Datei aus der Dateigruppe '[Violated File Group]' festgestellt." -Body "Vom Benutzer '[Source Io Owner]' wurde der Versuch unternommen, die Datei '[Source File Path]' unter '[File Screen Path]' auf dem Server '[Server]' zu speichern. Diese Datei befindet sich in der Dateigruppe '[Violated File Group]', die auf dem Server nicht zulässig ist."
-New-FsrmFileScreenTemplate -Name "Ransomware" –IncludeGroup "Ransomware" -Notification $Notification -Active
+New-FsrmFileScreenTemplate -Name "Ransomware" -IncludeGroup "Ransomware" -Notification $Notification -Active
 }
 
 function checkFSRMGroupRansomware($server)
