@@ -5,8 +5,8 @@ Configuring and Updating File Server Ressource Manager for blocking Fileextensio
                                                                                  
     Script:                   Ransomware_Fileextentionfilter.ps1                                      
     Author:                   Danny Roemhild, Luca Kaufmann
-    ModifyDate:               06.11.2020                                                       
+    ModifyDate:               07.11.2020                                                       
     Usage:        
-    Version:                  2.2
+    Version:                  2.3
                                                                                   
     ---------------------------------------------------------------------------------
