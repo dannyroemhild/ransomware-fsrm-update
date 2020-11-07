@@ -1,30 +1,34 @@
 <#
     .SYNOPSIS
-    script is used to import and compare the Blocklist on Github and your Trustlist txt file  extensions in windows fsrm (fileserver ressource manager)
+    This script is used to import and compare the Blocklist on Github and your Trustlist txt file in windows fsrm (fileserver ressource manager)
     .DESCRIPTION
-    The script imports the content of the git hub extentionlist  compares it with your Trustlist of Fileextentions 
-    and push the compared Version to the fsrm filegroup of your Fileserver
+    The script imports the content of the git hub extensionlist 
+    compares it with your Trustlist of Fileextensions 
+    and pushes the compared Version to the fsrm filegroup of your Fileserver
      
-         This Script can be implemented on a Central Task Server in a Domain
+    This Script can be implemented on a Central Task Server in a Domain
     .EXAMPLE
     -
     .Notes
     -
-
     .ToDo:_How_do_i_run_this_script?
     -
     
-    To run this Script you have to run it with Local Admin Credentials of the File Server you will Add this Extentions.
-    Define the Path of the extention Trustlist
+    - To run this Script you have to run it with credentials that have local administrative rights on the File Server you want to add the Extensions (No domain admin rights needed)
     
-    Place the FQDN of the Servers in the Server List like the Example given in GitHub 
-    This script can Push the Extentions of Mulitple File Server you defined in the list
-    The ServerList is necessary, because you can add an installed File Server and the Script automaticly creates all filegroups included The BlockRules.
-    You just need to create the Screen
-    With the Switch Parameter "-ScreenAllVolumes" you can Define if all your volumes on your Fileserver should get automaticly 
-    a Active File Screen
+    - Define the Path of an extension Trustlist - in which you can define exceptions for file extensions that will never be blocked regardless if this extension is included in the blocklist at the moment or anytime in the future
     
+    - Define the Admin Mail Adress so block events can be send to you for further investigation
     
+    - Define an SMTP Server Adress for the aforementioned System Mails
+    
+    - Place the FQDN of the Server(s) you want to push the list to in the Server List like the Example given in GitHub 
+    This script can push the Extensions to mulitple Fileservers you define in thi list
+    The serverlist is necessary, because you can add an installed File Server and the Script automaticly creates all filegroups included The BlockRules
+    
+    - You just need to create the Screen manually if you only want to monitor specific Volumes on your fileserver
+    You can use the optional script parameter "-ScreenAllVolumes" to automatically create an active filescreen for all volumes on your Fileserver 
+        
     .References
     -Update existing File Groups in FSRM via Powershell on multiple Systems   
     https://www.frankysweb.de/windows-fileserver-vor-ransomware-crypto-locker-schuetzen/
@@ -33,9 +37,9 @@
                                                                                  
     Script:                   Ransomware_Fileextentionfilter.ps1                                      
     Author:                   Danny Roemhild, Luca Kaufmann
-    ModifyDate:               06.11.2020                                                       
+    ModifyDate:               07.11.2020                                                       
     Usage:        
-    Version:                  2.2
+    Version:                  2.3
                                                                                   
     ---------------------------------------------------------------------------------
 #>
@@ -46,43 +50,43 @@ Param(
 
 
 
-#Defineable Variable
+#defineable Variables
 
 $AdminMailAdress = "Administrator@domain.de"
 $SmtpServer ="127.0.0.1"
 $PathServerList = "C:\temp\serverlist.txt"
 $pathTrustList = "C:\temp\TrustList.txt"
 
-#Environment
+#environment
 
 $localserverdomain = $ENV:USERDOMAIN.ToLower()
 [array]$serverlist = Get-Content -Path $PathServerList
 
 
-#funktions
+#functions
 
 function createEventdownloadError {
   
-    # Source can be custimized
-    if (![System.Diagnostics.EventLog]::SourceExists("File Extention Script")) {
-        New-EventLog -logname 'Ransomware Extentionfilter' -Source 'File Extention Script'
+    # Source can be customized
+    if (![System.Diagnostics.EventLog]::SourceExists("File Extension Blocklist Script")) {
+        New-EventLog -logname 'Ransomware Extensionfilter' -Source 'File Extension Blocklist Script'
     }
     
     # create Eventlog 
-    Write-EventLog -entrytype "Information" -logname "Ransomware Extentionfilter" -eventID 1 -Source 'File Extention Script' -Category 0  -Message "File Extentions for Ransomware Extentionfilter cannot be downloaded"
+    Write-EventLog -entrytype "Information" -logname "Ransomware Extensionfilter" -eventID 1 -Source 'File Extension Blocklist Script' -Category 0  -Message "File Extensions for Ransomware Extensionfilter could not be downloaded."
     
     }
 
 function createEventScreenVolume ($Volume) {
   
     # Source can be custimized
-    if (![System.Diagnostics.EventLog]::SourceExists("File Extention Script")) {
-        New-EventLog -logname 'Ransomware Extentionfilter' -Source 'File Extention Script'
+    if (![System.Diagnostics.EventLog]::SourceExists("File Extension Blocklist Script")) {
+        New-EventLog -logname 'Ransomware Extensionfilter' -Source 'File Extension Blocklist Script'
     }
     #Create Message
     $Message = "Created FSRM Ransomware Screen for Volume: " + $Volume 
     # create Eventlog 
-    Write-EventLog -entrytype "Information" -logname "Ransomware Extentionfilter" -eventID 1 -Source 'File Extention Script' -Category 0  -Message $Message
+    Write-EventLog -entrytype "Information" -logname "Ransomware Extensionfilter" -eventID 1 -Source 'File Extension Blocklist Script' -Category 0  -Message $Message
     
     }
 
@@ -114,6 +118,7 @@ else
 
 
 }
+
 function autocheckVolumescreateScreen()
 {
     $Volumes = Get-Partition | Where-Object {$_.DiskNumber -ne 0} | Select-Object DriveLetter
@@ -175,7 +180,7 @@ Set-FsrmFileGroup -Name "Ransomware" -IncludePattern $currentpattern
 
 
 
-    #Beginn Script
+#Beginn Script
    
     try {
         $download = Invoke-WebRequest https://raw.githubusercontent.com/dannyroemhild/ransomware-fileext-list/master/fileextlist.txt
