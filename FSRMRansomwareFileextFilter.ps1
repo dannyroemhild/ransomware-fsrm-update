@@ -47,19 +47,18 @@ Param(
     [Parameter(Mandatory=$False)]
     [switch]$ScreenAllVolumes
 )
-
+$localserverdomain = $ENV:USERDOMAIN.ToLower()
 
 
 #defineable Variables
 
 $AdminMailAdress = "Administrator@domain.de"
 $SmtpServer ="127.0.0.1"
-$PathServerList = "C:\temp\serverlist.txt"
+$PathServerList = "C:\temp\serverlist_"+$localserverdomain+".txt"
 $pathTrustList = "C:\temp\TrustList.txt"
 
 #environment
 
-$localserverdomain = $ENV:USERDOMAIN.ToLower()
 [array]$serverlist = Get-Content -Path $PathServerList
 
 
@@ -69,7 +68,7 @@ function createEventdownloadError {
   
     # Source can be customized
     if (![System.Diagnostics.EventLog]::SourceExists("File Extension Blocklist Script")) {
-        New-EventLog -logname 'Ransomware Extensionfilter' -Source 'File Extension Blocklist Script'
+        New-EventLog -logname 'Ransomware Extension Filter' -Source 'File Extension Blocklist Script' 
     }
     
     # create Eventlog 
@@ -77,23 +76,16 @@ function createEventdownloadError {
     
     }
 
-function createEventScreenVolume ($Volume) {
-  
-    # Source can be custimized
-    if (![System.Diagnostics.EventLog]::SourceExists("File Extension Blocklist Script")) {
-        New-EventLog -logname 'Ransomware Extensionfilter' -Source 'File Extension Blocklist Script'
-    }
-    #Create Message
-    $Message = "Created FSRM Ransomware Screen for Volume: " + $Volume 
-    # create Eventlog 
-    Write-EventLog -entrytype "Information" -logname "Ransomware Extensionfilter" -eventID 1 -Source 'File Extension Blocklist Script' -Category 0  -Message $Message
-    
-    }
+
 
 function createFSRMGroup ([string]$AdminMailAdress, [string]$SmtpServer){
-    
+
+$sys = Get-WmiObject -Class "Win32_ComputerSystem"
+[string]$FromMail = $sys.Name+"@"+$sys.Domain
+
+
 # SMTP-Settings for FSRM :
-Set-FsrmSetting -SmtpServer $SmtpServer -AdminEmailAddress $AdminMailAdress
+Set-FsrmSetting -SmtpServer $SmtpServer -AdminEmailAddress $AdminMailAdress -FromEmailAdress $FromMail
 
 # New FSRM Group and create Template :
 New-FsrmFileGroup -Name "Ransomware" -IncludePattern @("*.0day", "*.crypt")
@@ -121,6 +113,21 @@ else
 
 function autocheckVolumescreateScreen()
 {
+    function createEventScreenVolume ($Volume) 
+        {
+  
+            # Source can be custimized
+            if (![System.Diagnostics.EventLog]::SourceExists("File Extension Blocklist Script")) {
+                New-EventLog -logname 'Ransomware Extensionfilter' -Source 'File Extension Blocklist Script' 
+            }
+            #Create Message
+            $Message = "Created FSRM Ransomware Screen for Volume: " + $Volume 
+            # create Eventlog 
+            Write-EventLog -entrytype "Information" -logname "Ransomware Extensionfilter" -eventID 1 -Source 'File Extension Blocklist Script' -Category 0  -Message $Message
+    
+        }
+
+
     $Volumes = Get-Partition | Where-Object {$_.DiskNumber -ne 0} | Select-Object DriveLetter
     [System.Collections.ArrayList]$Drives = @()
     foreach ($Volume in $Volumes)
@@ -178,12 +185,10 @@ Set-FsrmFileGroup -Name "Ransomware" -IncludePattern $currentpattern
 
 }
 
-
-
 #Beginn Script
    
     try {
-        $download = Invoke-WebRequest https://raw.githubusercontent.com/dannyroemhild/ransomware-fileext-list/master/fileextlist.txt
+        $download = Invoke-WebRequest https://raw.githubusercontent.com/dannyroemhild/ransomware-fileext-list/master/fileextlist.txt -UseBasicParsing
     } catch {
         
         createEventdownloadError
