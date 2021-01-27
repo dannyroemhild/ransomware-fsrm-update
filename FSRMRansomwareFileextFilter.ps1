@@ -72,7 +72,7 @@ function createEventdownloadError {
     }
     
     # create Eventlog 
-    Write-EventLog -entrytype "Information" -logname "Ransomware Extensionfilter" -eventID 1 -Source 'File Extension Blocklist Script' -Category 0  -Message "File Extensions for Ransomware Extensionfilter could not be downloaded."
+    Write-EventLog -entrytype "Information" -logname "Ransomware Extension Filter" -eventID 1 -Source 'File Extension Blocklist Script' -Category 0  -Message "File Extensions for Ransomware Extensionfilter could not be downloaded."
     
     }
 
@@ -85,7 +85,7 @@ $sys = Get-WmiObject -Class "Win32_ComputerSystem"
 
 
 # SMTP-Settings for FSRM :
-Set-FsrmSetting -SmtpServer $SmtpServer -AdminEmailAddress $AdminMailAdress -FromEmailAdress $FromMail
+Set-FsrmSetting -SmtpServer $SmtpServer -AdminEmailAddress $AdminMailAdress -FromEmailAddress $FromMail
 
 # New FSRM Group and create Template :
 New-FsrmFileGroup -Name "Ransomware" -IncludePattern @("*.0day", "*.crypt")
